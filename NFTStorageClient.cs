@@ -11,6 +11,8 @@ using System.Web;
 using System.Text;
 using NFTStorage.JSONSerialization;
 using UnityEngine.Networking;
+using UnityEngine.UI;
+
 
 namespace NFTStorage.JSONSerialization
 {
@@ -108,12 +110,12 @@ namespace NFTStorage.JSONSerialization
         public NFTStorageError error;
     }
 
-
-    [Serializable]
+     [Serializable]
     public class NFTStorageCustomUploadResponse
     {
         public bool ok;
         public NFTStorageNFTObject value;
+
         //public NFTStorageError error;
     }
 
@@ -130,6 +132,7 @@ namespace NFTStorage
     // This is the main class for communicating with nft.storage and IPFS
     public class NFTStorageClient : MonoBehaviour
     {
+
         // nft.storage API endpoint
         private static readonly string nftStorageApiUrl = "https://api.nft.storage/";
 
@@ -140,7 +143,9 @@ namespace NFTStorage
         private static readonly HttpClient ipfsClient = new HttpClient();
 
         // nft.storage API key
-        public string apiToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweEU3QTI2NWRENzY4YTUyZDEzNTdEMzRFNWExMEUzYWJjRGYyYjdlZEMiLCJpc3MiOiJuZnQtc3RvcmFnZSIsImlhdCI6MTY3NDYwMjY2MDA5NiwibmFtZSI6Ik56TGliIn0.BmsrsNQVtKlPw8ar_GIQAbKvE463s4czBXo3BXUWgD8";
+        public string apiToken;
+
+        public GameObject cid;
 
         /**
         <summary>"Start" is called before the first frame update for initializing "NFTStorageClient"</summary>
@@ -198,20 +203,20 @@ namespace NFTStorage
             byte[] bytes = System.IO.File.ReadAllBytes(pathFile);
             try
             {
-                    using (var content = new ByteArrayContent(bytes))
-                    {
-                        content.Headers.ContentType = new MediaTypeHeaderValue("*/*");
+                using (var content = new ByteArrayContent(bytes))
+                {
+                    content.Headers.ContentType = new MediaTypeHeaderValue("*/*");
 
-                        nftClient.Timeout = new TimeSpan(1, 0, 0);// 1 hour should be enough probably
+                    nftClient.Timeout = new TimeSpan(1, 0, 0);// 1 hour should be enough probably
 
-                        //Send it
-                        print("Uploading...");
-                        var response = await nftClient.PostAsync(uri, content);
-                        response.EnsureSuccessStatusCode();
-                        Stream responseStream = await response.Content.ReadAsStreamAsync();
-                        StreamReader reader = new StreamReader(responseStream);
-                        return reader.ReadToEnd();
-                    }
+                    //Send it
+                    print("Uploading...");
+                    var response = await nftClient.PostAsync(uri, content);
+                    response.EnsureSuccessStatusCode();
+                    Stream responseStream = await response.Content.ReadAsStreamAsync();
+                    StreamReader reader = new StreamReader(responseStream);
+                    return reader.ReadToEnd();
+                }
             }
             catch (HttpRequestException e)
             {
@@ -243,10 +248,14 @@ namespace NFTStorage
             }
             else
             {
+                
                 Debug.Log("Received: " + uwr.downloadHandler.text);
                 NFTStorageCustomUploadResponse parsedResponse = JsonUtility.FromJson<NFTStorageCustomUploadResponse>(uwr.downloadHandler.text);
                 Text cidText = cid.GetComponent<Text>();
                 cidText.text = parsedResponse.value.cid;
+                
+                MintWeb3Wallet721 mintScript = GetComponent<MintWeb3Wallet721>();
+                mintScript.cid = cidText.text;
                 Debug.Log("CID: " + cid);
             }
         }
@@ -262,7 +271,7 @@ namespace NFTStorage
 
         void HandleProgress(float currentProgress)
         {
-            print(currentProgress); // upload progrees bettween 0 and 1 
+            print("Upload : " + currentProgress * 100); // upload progrees bettween 0 and 1 
         }
 
 
@@ -362,11 +371,11 @@ namespace NFTStorage
             NFTStorageUploadResponse parsedResponse = JsonUtility.FromJson<NFTStorageUploadResponse>(rawResponse);
             return parsedResponse;
         }
-        
+
         /*
         <summary>Upload a file using "nft.storage" unitywebrequest </summary>
         */
-        
+
         public void UploadDataFromStringUnityWebrequest(string path)
         {
             string requestUri = nftStorageApiUrl + "/upload";
@@ -376,3 +385,4 @@ namespace NFTStorage
         }
     }
 }
+
