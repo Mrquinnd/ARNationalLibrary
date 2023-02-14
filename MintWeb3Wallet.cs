@@ -15,10 +15,13 @@ public class MintWeb3Wallet721 : MonoBehaviour
     string type = "721";
 
     // image
-
+    
+    public string customMetadata = "{\"cid\":\"" + cid + "\"}";
 
     public async void VoucherMintNft721()
     {
+
+        
         var voucherResponse721 = await EVM.Get721Voucher();
         CreateRedeemVoucherModel.CreateVoucher721 voucher721 = new CreateRedeemVoucherModel.CreateVoucher721();
         voucher721.tokenId = voucherResponse721.tokenId;
@@ -27,7 +30,8 @@ public class MintWeb3Wallet721 : MonoBehaviour
         voucher721.receiver = voucherResponse721.receiver;
         voucher721.signature = voucherResponse721.signature;
         string voucherArgs = JsonUtility.ToJson(voucher721);
-        
+        voucherArgs += ",\"metadata\":" + customMetadata;
+
         //image URI
 
 
